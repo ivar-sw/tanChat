@@ -1,0 +1,9 @@
+node_modules
+.env
+dist
+.output
+.vinxi
+.data/
+.tanstack/
+test-results/
+app.config.timestamp_*
