@@ -83,6 +83,42 @@ describe('useWsListener', () => {
     expect(useChatStore.getState().channels).toContainEqual({ id: 5, name: 'new-channel', createdBy: null })
   })
 
+  it('channel:deleted removes channel from store', () => {
+    useChatStore.setState({
+      channels: [
+        { id: 1, name: 'general', createdBy: null },
+        { id: 2, name: 'random', createdBy: null },
+      ],
+    })
+
+    renderHook(() => useWsListener())
+
+    emit({ type: 'channel:deleted', channelId: 2 })
+
+    expect(useChatStore.getState().channels).toEqual([
+      { id: 1, name: 'general', createdBy: null },
+    ])
+  })
+
+  it('channel:deleted moves active user to general with system message', () => {
+    useChatStore.setState({
+      channelId: 2,
+      channels: [
+        { id: 1, name: 'general', createdBy: null },
+        { id: 2, name: 'random', createdBy: null },
+      ],
+    })
+
+    renderHook(() => useWsListener())
+
+    emit({ type: 'channel:deleted', channelId: 2 })
+
+    const state = useChatStore.getState()
+    expect(state.channelId).toBe(1)
+    expect(state.messages).toHaveLength(1)
+    expect(state.messages[0].content).toBe('You were moved from channel: random because it was removed')
+  })
+
   it('presence:update sets online users', () => {
     renderHook(() => useWsListener())
 
@@ -117,5 +153,15 @@ describe('useWsListener', () => {
     const messages = useChatStore.getState().messages
     expect(messages).toHaveLength(1)
     expect(messages[0].content).toBe('charlie has joined the chat')
+  })
+
+  it('user:left adds system message', () => {
+    renderHook(() => useWsListener())
+
+    emit({ type: 'user:left', username: 'charlie' })
+
+    const messages = useChatStore.getState().messages
+    expect(messages).toHaveLength(1)
+    expect(messages[0].content).toBe('charlie has left the channel')
   })
 })

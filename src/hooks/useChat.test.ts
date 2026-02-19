@@ -79,6 +79,7 @@ describe('useChat', () => {
     })
 
     expect(mockSendMessage).toHaveBeenCalledWith({ data: { channelId: 1, content: 'hello' } })
+    expect(useChatStore.getState().messages).toContainEqual(savedMessage)
     expect(wsClient.send).toHaveBeenCalledWith({ type: 'message:new', channelId: 1, messageId: 10 })
     expect(wsClient.send).toHaveBeenCalledWith({ type: 'typing:stop' })
   })

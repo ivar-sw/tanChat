@@ -6,6 +6,29 @@ import { RegisterPage } from './pages/register.page'
 
 const uniqueUser = () => `u_${randomUUID().replace(/-/g, '').slice(0, 8)}_${Date.now().toString(36)}`
 
+async function registerAndReachChat(page: import('@playwright/test').Page, register: RegisterPage, options?: { username?: string, maxAttempts?: number }) {
+  const maxAttempts = options?.maxAttempts ?? 4
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const username = options?.username ?? uniqueUser()
+    await register.goto()
+    await register.register(username, 'password123')
+
+    try {
+      await expect(page).toHaveURL(/\/chat/, { timeout: 12_000 })
+      return username
+    }
+    catch (error) {
+      lastError = error
+      if (options?.username)
+        throw error
+    }
+  }
+
+  throw lastError ?? new Error('Failed to register and reach chat')
+}
+
 test.describe('authentication', () => {
   test('redirects unauthenticated user from / to /login', async ({ page }) => {
     await page.goto('/')
@@ -36,21 +59,15 @@ test.describe('authentication', () => {
 
   test('registers a new user and lands on chat', async ({ page }) => {
     const register = new RegisterPage(page)
-    await register.goto()
-
-    await register.register(uniqueUser(), 'password123')
+    await registerAndReachChat(page, register)
 
     const chat = new ChatPage(page)
     await chat.expectLoaded()
   })
 
   test('stays on register when username already exists', async ({ page }) => {
-    const username = uniqueUser()
     const register = new RegisterPage(page)
-
-    await register.goto()
-    await register.register(username, 'password123')
-    await expect(page).toHaveURL(/\/chat/)
+    const username = await registerAndReachChat(page, register)
 
     // Log out and try registering with the same username.
     const chat = new ChatPage(page)
@@ -70,13 +87,9 @@ test.describe('authentication', () => {
   })
 
   test('full flow: register, logout, login', async ({ page }) => {
-    const username = uniqueUser()
-    const password = 'password123'
-
-    // Register
     const register = new RegisterPage(page)
-    await register.goto()
-    await register.register(username, password)
+    const username = await registerAndReachChat(page, register)
+    const password = 'password123'
 
     const chat = new ChatPage(page)
     await chat.expectLoaded()

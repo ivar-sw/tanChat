@@ -11,6 +11,8 @@ import {
   broadcastAll,
   getChannelCounts,
   getOnlineUsers,
+  handleChannelCreated,
+  handleChannelDeleted,
   handleChannelJoin,
   handleNewMessage,
   handleTypingStart,
@@ -52,6 +54,12 @@ wss.on('connection', (ws: AuthedSocket, req) => {
         case 'message:new':
           void handleNewMessage(wss, ws, msg, user)
           break
+        case 'channel:created':
+          handleChannelCreated(wss, msg)
+          break
+        case 'channel:deleted':
+          handleChannelDeleted(wss, msg)
+          break
         case 'typing:start':
           handleTypingStart(wss, ws, user)
           break
@@ -68,6 +76,10 @@ wss.on('connection', (ws: AuthedSocket, req) => {
   ws.on('close', () => {
     logger.info({ userId: user.userId }, 'WS disconnected')
     if (ws.channelId !== undefined) {
+      broadcast(wss, ws.channelId, {
+        type: 'user:left',
+        username: user.username,
+      })
       broadcast(wss, ws.channelId, {
         type: 'presence:update',
         users: getOnlineUsers(wss, ws.channelId),

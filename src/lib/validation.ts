@@ -43,6 +43,15 @@ export const friendlyParse = <T>(schema: z.ZodSchema<T>, data: unknown): T => {
 export const clientWsMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('channel:join'), channelId: channelIdSchema }),
   z.object({ type: z.literal('message:new'), channelId: channelIdSchema, messageId: channelIdSchema }),
+  z.object({
+    type: z.literal('channel:created'),
+    channel: z.object({
+      id: channelIdSchema,
+      name: channelNameSchema,
+      createdBy: z.number().int().positive().nullable(),
+    }),
+  }),
+  z.object({ type: z.literal('channel:deleted'), channelId: channelIdSchema }),
   z.object({ type: z.literal('typing:start') }),
   z.object({ type: z.literal('typing:stop') }),
 ])

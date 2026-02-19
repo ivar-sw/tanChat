@@ -7,6 +7,7 @@ import { useWsListener } from './useWsListener'
 
 export const useChat = () => {
   const channelId = useChatStore(state => state.channelId)
+  const addMessage = useChatStore(state => state.addMessage)
   const setMessages = useChatStore(state => state.setMessages)
   const setMessagesLoading = useChatStore(state => state.setMessagesLoading)
   const clearTyping = useTypingStore(state => state.clearAll)
@@ -35,6 +36,7 @@ export const useChat = () => {
       if (channelId === null)
         return
       const savedMessage = await sendMessage({ data: { channelId, content } })
+      addMessage(savedMessage)
       wsClient.send({
         type: 'message:new',
         channelId,
@@ -42,7 +44,7 @@ export const useChat = () => {
       })
       wsClient.send({ type: 'typing:stop' })
     },
-    [channelId],
+    [addMessage, channelId],
   )
 
   const sendTyping = useCallback(() => {

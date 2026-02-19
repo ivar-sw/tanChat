@@ -200,6 +200,9 @@ describe('ws-handlers', () => {
 
       expect(ws.channelId).toBe(2)
       expect(oldChannelClient.send).toHaveBeenCalled()
+
+      const payloads = (oldChannelClient.send as ReturnType<typeof vi.fn>).mock.calls.map(call => JSON.parse(call[0]))
+      expect(payloads).toContainEqual({ type: 'user:left', username: 'alice' })
     })
   })
 

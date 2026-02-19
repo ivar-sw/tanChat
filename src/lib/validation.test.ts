@@ -174,12 +174,14 @@ describe('validation schemas', () => {
       expect(() => clientWsMessageSchema.parse({ type: 'message:new', channelId: 1, messageId: 0 })).toThrow()
     })
 
-    it('rejects channel:created from client', () => {
-      expect(() => clientWsMessageSchema.parse({ type: 'channel:created', channel: { id: 1, name: 'test', createdBy: null } })).toThrow()
+    it('accepts channel:created from client', () => {
+      expect(clientWsMessageSchema.parse({ type: 'channel:created', channel: { id: 1, name: 'test', createdBy: null } }))
+        .toEqual({ type: 'channel:created', channel: { id: 1, name: 'test', createdBy: null } })
     })
 
-    it('rejects channel:deleted from client', () => {
-      expect(() => clientWsMessageSchema.parse({ type: 'channel:deleted', channelId: 1 })).toThrow()
+    it('accepts channel:deleted from client', () => {
+      expect(clientWsMessageSchema.parse({ type: 'channel:deleted', channelId: 1 }))
+        .toEqual({ type: 'channel:deleted', channelId: 1 })
     })
 
     it('rejects unknown type', () => {

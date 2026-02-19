@@ -19,7 +19,11 @@ export const ChatMessage = ({
   timestamp,
 }: Props) => {
   if (userId === SYSTEM_USER_ID) {
-    return <SystemMessage content={content} />
+    return (
+      <Stack width="100%" alignItems="center">
+        <SystemMessage content={content} align="center" highlight />
+      </Stack>
+    )
   }
 
   return (

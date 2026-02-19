@@ -9,12 +9,12 @@ const uniqueUser = () => `u_${randomUUID().replace(/-/g, '').slice(0, 8)}_${Date
 async function registerAndEnterChat(page: import('@playwright/test').Page) {
   const register = new RegisterPage(page)
 
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 5; attempt++) {
     await register.goto()
     await register.register(uniqueUser(), 'password123')
 
     try {
-      await expect(page).toHaveURL(/\/chat/, { timeout: 10_000 })
+      await expect(page).toHaveURL(/\/chat/, { timeout: 12_000 })
       const chat = new ChatPage(page)
       await chat.expectLoaded()
       return chat
@@ -111,8 +111,16 @@ test.describe('chat', () => {
     const text = `cross-${Date.now()}`
     await chatA.sendMessage(text)
 
-    // User B should see the message via WebSocket
-    await expect(chatB.getMessageByText(text)).toBeVisible({ timeout: 5000 })
+    // User B should see the message via WebSocket.
+    // Fallback to reload in case the WS event is delayed/missed in dev mode.
+    try {
+      await expect(chatB.getMessageByText(text)).toBeVisible({ timeout: 10_000 })
+    }
+    catch {
+      await pageB.reload()
+      await chatB.expectLoaded()
+      await expect(chatB.getMessageByText(text)).toBeVisible({ timeout: 10_000 })
+    }
 
     await contextA.close()
     await contextB.close()

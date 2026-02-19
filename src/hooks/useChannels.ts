@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from 'react'
+import { wsClient } from '~/lib/ws-client'
 import { createChannel, deleteChannel, getChannels } from '~/server/rpc/chat'
 import { useChatStore } from '~/stores/chat'
 
@@ -18,6 +19,7 @@ export const useChannels = () => {
     async (name: string) => {
       const channel = await createChannel({ data: { name } })
       addChannel(channel)
+      wsClient.send({ type: 'channel:created', channel })
       return channel
     },
     [addChannel],
@@ -27,6 +29,7 @@ export const useChannels = () => {
     async (channelId: number) => {
       await deleteChannel({ data: { channelId } })
       removeChannel(channelId)
+      wsClient.send({ type: 'channel:deleted', channelId })
     },
     [removeChannel],
   )

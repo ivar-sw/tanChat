@@ -23,6 +23,8 @@ export interface Channel {
 export type ClientWsMessage
   = | { type: 'channel:join', channelId: number }
     | { type: 'message:new', channelId: number, messageId: number }
+    | { type: 'channel:created', channel: Channel }
+    | { type: 'channel:deleted', channelId: number }
     | { type: 'typing:start' }
     | { type: 'typing:stop' }
 
@@ -34,5 +36,6 @@ export type ServerWsMessage
     | { type: 'typing:start', userId: number, username: string }
     | { type: 'typing:stop', userId: number }
     | { type: 'user:joined', username: string }
+    | { type: 'user:left', username: string }
     | { type: 'channel:created', channel: Channel }
     | { type: 'channel:deleted', channelId: number }

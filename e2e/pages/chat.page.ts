@@ -16,14 +16,23 @@ export class ChatPage {
     this.channelList = page.getByRole('list')
   }
 
+  private escapeRegExp(text: string) {
+    return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  }
+
   async expectLoaded() {
     await expect(this.page).toHaveURL(/\/chat/, { timeout: 15_000 })
     await expect(this.page.getByText('TanChat')).toBeVisible({ timeout: 15_000 })
+    await expect(this.getChannelItem('general')).toBeVisible({ timeout: 15_000 })
+    await this.selectChannel('general')
   }
 
   async sendMessage(content: string) {
     await this.messageInput.fill(content)
+    await expect(this.sendButton).toBeEnabled()
     await this.sendButton.click()
+    await expect(this.messageInput).toHaveValue('', { timeout: 10_000 })
+    await expect(this.getMessageByText(content)).toBeVisible({ timeout: 10_000 })
   }
 
   async selectChannel(name: string) {
@@ -61,7 +70,7 @@ export class ChatPage {
   }
 
   getMessageByText(text: string) {
-    return this.page.getByText(text)
+    return this.page.locator('p').filter({ hasText: new RegExp(`^${this.escapeRegExp(text)}$`) })
   }
 
   getChannelItem(name: string) {

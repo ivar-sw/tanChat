@@ -75,6 +75,10 @@ export const handleChannelJoin = (wss: WebSocketServer, ws: AuthedSocket, msg: E
 
   if (oldChannel !== undefined) {
     broadcast(wss, oldChannel, {
+      type: 'user:left',
+      username: user.username,
+    })
+    broadcast(wss, oldChannel, {
       type: 'presence:update',
       users: getOnlineUsers(wss, oldChannel),
     })
